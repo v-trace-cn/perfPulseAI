@@ -1,0 +1,10 @@
+:root {
+  --tooltip-bg: rgba(255, 255, 255, 0.9);
+  --tooltip-border: rgba(0, 0, 0, 0.1);
+}
+
+.dark {
+  --tooltip-bg: rgba(17, 24, 39, 0.8);
+  --tooltip-border: rgba(255, 255, 255, 0.1);
+}
+
