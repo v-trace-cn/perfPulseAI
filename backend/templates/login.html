@@ -1,0 +1,104 @@
+{% extends "base.html" if not minimal_layout else "minimal_base.html" %}
+{% block title %}登录 - PerfPulseAI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-background p-4">
+    <div class="w-full max-w-md">
+        <div class="card bg-card shadow-lg rounded-lg overflow-hidden">
+            <div class="card-header p-5 bg-card-foreground/10">
+                <h1 class="text-2xl font-bold text-center text-foreground">登录 PerfPulseAI</h1>
+                <p class="text-center text-muted-foreground mt-2">输入您的凭据以访问平台</p>
+            </div>
+            <div class="card-body p-6">
+                <form id="login-form" class="space-y-4">
+                    {% if error %}
+                    <div class="p-4 mb-4 text-sm rounded-lg bg-destructive/20 text-destructive" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    <div class="space-y-2">
+                        <label for="username" class="text-sm font-medium">用户名</label>
+                        <input
+                            id="username"
+                            name="username"
+                            type="text"
+                            class="w-full px-3 py-2 border rounded-md text-foreground bg-background border-input focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            placeholder="输入用户名"
+                            required
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="password" class="text-sm font-medium">密码</label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            class="w-full px-3 py-2 border rounded-md text-foreground bg-background border-input focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            placeholder="输入密码"
+                            required
+                        />
+                    </div>
+                    <div id="error-message" class="text-sm text-destructive hidden"></div>
+                    <button
+                        type="submit"
+                        id="login-button"
+                        class="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    >
+                        登录
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer p-4 bg-card-foreground/5 text-center">
+                <p class="text-sm text-muted-foreground">没有账号? 请联系管理员</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('login-form');
+        const loginButton = document.getElementById('login-button');
+        const errorMessage = document.getElementById('error-message');
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 禁用按钮并显示加载状态
+            loginButton.disabled = true;
+            loginButton.textContent = '登录中...';
+            errorMessage.classList.add('hidden');
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || '登录失败');
+                }
+                
+                // 登录成功，重定向到首页
+                window.location.href = '/';
+                
+            } catch (error) {
+                errorMessage.textContent = error.message || '登录时发生错误';
+                errorMessage.classList.remove('hidden');
+                loginButton.disabled = false;
+                loginButton.textContent = '登录';
+            }
+        });
+    });
+</script>
+{% endblock %}
