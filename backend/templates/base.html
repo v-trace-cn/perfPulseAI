@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PerfPulseAI - AIu6cbbu7406u4e0eu6fc0u52b1u7cfbu7edf{% endblock %}</title>
+    <meta name="description" content="u4e0bu4e00u4ee3 AI u6cbbu7406u4e0eu6fc0u52b1u673au5236">
+    <!-- u52a0u8f7du57fau7840CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+    <!-- u81eau5b9au4e49u6837u5f0f -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body class="bg-background text-foreground min-h-screen flex flex-col">
+    <div class="flex flex-col min-h-screen">
+        {% block header %}
+        <header class="bg-card shadow-sm">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-xl font-bold text-primary">PerfPulseAI</a>
+                </div>
+                <nav>
+                    <ul class="flex space-x-6">
+                        {% if session.get('user_id') %}
+                        <li><a href="/" class="hover:text-primary transition-colors">u4e3bu9875</a></li>
+                        <li><a href="/rewards" class="hover:text-primary transition-colors">u5956u52b1</a></li>
+                        <li><a href="/activities" class="hover:text-primary transition-colors">u6d3bu52a8</a></li>
+                        <li>
+                            <a href="/auth/logout" class="hover:text-primary transition-colors">u767bu51fa</a>
+                        </li>
+                        {% else %}
+                        <li><a href="/auth/login" class="hover:text-primary transition-colors">u767bu5f55</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        {% endblock %}
+
+        <main class="flex-1">
+            {% block content %}{% endblock %}
+        </main>
+
+        {% block footer %}
+        <footer class="bg-card shadow-inner py-6 mt-auto">
+            <div class="container mx-auto px-4">
+                <div class="text-center text-muted-foreground">
+                    <p>&copy; {{ current_year }} PerfPulseAI. u4fddu7559u6240u6709u6743u5229</p>
+                </div>
+            </div>
+        </footer>
+        {% endblock %}
+    </div>
+    
+    <!-- u57fau7840JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
