@@ -6,6 +6,20 @@ PerfPulseAI 是一个 Flask 驱动的全栈应用，用于 AI 绩效管理和激
 
 PerfPulseAI 旨在通过 AI 技术自动化梳理和管理员工绩效，提供透明的激励机制，促进团队协作和个人成长。该项目采用 Flask 作为全栈解决方案，既提供后端 API 服务，也负责渲染前端页面。
 
+## 部署流程
+
+1. **后端部署**
+   - 安装Python和依赖: `pip install -r backend/requirements.txt`
+   - 配置环境变量: 复制 `.env.example` 到 `.env` 并修改
+   - （首次可选）初始化数据库: `python backend/init_db.py` 初始化数据，如果不执行也可以，只是数据库中数据为空
+   - 启动API服务器: `python backend/app.py`
+
+2. **前端部署**
+   - 安装Node.js和依赖: `cd frontend && npm install` 或者 `npm install --legacy-peer-deps`
+   - 开发模式: `npm run dev`
+   - 生产构建: `npm run build`
+
+
 ## 项目结构
 
 ```
@@ -47,19 +61,6 @@ perfPulseAI/
     │   └── styles/            # 样式文件
     └── .env.example           # 环境变量示例
 ```
-
-## 部署流程
-
-1. **后端部署**
-   - 安装Python和依赖: `pip install -r backend/requirements.txt`
-   - 配置环境变量: 复制 `.env.example` 到 `.env` 并修改
-   - （首次可选）启动数据库: `python backend/init_db.py`
-   - 启动API服务器: `python backend/app.py`
-
-2. **前端部署**
-   - 安装Node.js和依赖: `cd frontend && npm install` 或者 `npm install --legacy-peer-deps`
-   - 开发模式: `npm run dev`
-   - 生产构建: `npm run build`
 
 ## 项目特点
 
