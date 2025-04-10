@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
+import { backendUrl } from '../../../../lib/config/server-api-config';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log('Login request received:', body);
     
-    // Forward the request to the backend
-    const response = await fetch('http://127.0.0.1:5000/api/users/login', {
+    // Direct connection to the backend with proper timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${backendUrl}/api/auth/login`, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -15,31 +19,20 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(body),
     });
-
-    console.log('Backend login response status:', response.status);
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Backend login error response:', errorData);
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: errorData.message || `Backend error: ${response.status}`,
-          error: errorData.message || `Backend error: ${response.status}` 
-        },
-        { status: response.status }
-      );
-    }
-
+    clearTimeout(timeoutId);
+    
     const data = await response.json();
-    console.log('Backend login data:', data);
+    
+    // Return the response with the expected structure:
+    // { data: { email, name, userId }, message: "...", success: true/false }
     return NextResponse.json(data);
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
       { 
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to process login request',
+        message: '登录失败，请稍后再试',
         error: String(error)
       },
       { status: 500 }

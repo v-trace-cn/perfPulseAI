@@ -65,6 +65,7 @@ export default function ClientPage() {
     confirmPassword: "",
     passwordMatch: "",
   })
+  const [registrationStatus, setRegistrationStatus] = useState<string>("");
   const [helpDialogOpen, setHelpDialogOpen] = useState(false)
   const [activeHelpTab, setActiveHelpTab] = useState("faq")
   const [activeTab, setActiveTab] = useState("profile")
@@ -262,18 +263,40 @@ export default function ClientPage() {
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      let success = false;
+      let loginSuccess = false;
+      let registrationStatus = "";
       
       if (authMode === "login") {
         // 登录逻辑
-        success = await login(formData.email, formData.password);
+        loginSuccess = await login(formData.email, formData.password);
+        
+        if (loginSuccess) {
+          setAuthDialogOpen(false);
+        }
       } else {
         // 注册逻辑
-        success = await register(formData.email, formData.password, formData.email.split("@")[0]);
-      }
-      
-      if (success) {
-        setAuthDialogOpen(false);
+        try {
+          const result = await register(formData.email, formData.password, formData.email.split("@")[0]);
+          
+          if (result.success) {
+            if (result.noUserId) {
+              // 注册成功但未返回用户ID
+              registrationStatus = "注册成功，但未返回用户ID";
+              setRegistrationStatus(registrationStatus);
+              // 保持对话框开启，让用户看到提示信息
+            } else {
+              // 立即设置一个基本的成功消息
+              registrationStatus = "注册成功";
+              setRegistrationStatus(registrationStatus);
+              
+              // 0.5秒后关闭对话框，给用户足够时间看到成功消息但不过长
+              setTimeout(() => setAuthDialogOpen(false), 500);
+            }  
+          }
+        } catch (err) {
+          registrationStatus = "注册失败，请稍后再试";
+          setRegistrationStatus(registrationStatus);
+        }
       }
     }
   }
@@ -444,11 +467,44 @@ export default function ClientPage() {
                 ? "请输入您的邮箱和密码登录系统"
                 : "创建一个新账号以访问AI治理系统"}
             </DialogDescription>
+            {authMode === "register" && registrationStatus && registrationStatus.includes("但未返回") && (
+              <div className="mt-2 text-sm text-yellow-600 dark:text-yellow-400 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <p>您可以稍后使用注册的邮箱和密码登录系统</p>
+              </div>
+            )}
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {error && (
               <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-md text-sm mb-2">
                 <p>{error}</p>
+              </div>
+            )}
+            {registrationStatus && (
+              <div className={`${registrationStatus.includes("但未返回") ? "bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400" : "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 text-green-600 dark:text-green-400"} border p-3 rounded-md text-sm mb-4`}>
+                <div className="flex items-start">
+                  {registrationStatus.includes("但未返回") ? (
+                    <div className="mr-2 flex-shrink-0 mt-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="mr-2 flex-shrink-0 mt-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium">{registrationStatus}</p>
+                    {registrationStatus.includes("用户ID") && (
+                      <p className="mt-1 text-xs">注册成功！您的用户ID已返回，可以使用此账号登录系统。</p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
             <div className="grid grid-cols-4 items-center gap-4">

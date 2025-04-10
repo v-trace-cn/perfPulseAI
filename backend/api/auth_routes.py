@@ -22,7 +22,11 @@ def login():
     if user and user.check_password(password):
         return jsonify({
             "success": True,
-            "userId": user.id,
+            "data": {
+                "userId": user.id,
+                "name": user.name,
+                "email": user.email
+            },
             "message": "登录成功"
         })
     
@@ -67,6 +71,12 @@ def register():
     
     return jsonify({
         "success": True,
+        "userId": new_user.id,
+        "data": {
+                "userId": new_user.id,
+                "name": new_user.name,
+                "email": new_user.email
+            },
         "message": "注册成功"
     })
 
