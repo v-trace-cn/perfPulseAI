@@ -1,43 +1,56 @@
 import { NextResponse } from 'next/server';
+import { backendUrl } from '../../../lib/config/server-api-config';
 
 export async function GET() {
+  const testUrl = `${backendUrl}/api/health`;
+  console.log(`正在测试后端连接: ${testUrl}`);
+
   try {
-    console.log('Attempting to connect to backend health endpoint...');
-    
-    // Forward the request to the backend with CORS headers
-    const response = await fetch('http://127.0.0.1:5000/api/health', {
+    // 测试性请求，添加详细日志
+    const response = await fetch(testUrl, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      // Add a timeout to avoid hanging requests
-      signal: AbortSignal.timeout(5000)
+        'Origin': 'http://192.168.2.13:3000' // 确保与前端地址一致
+      }
     });
 
-    console.log('Backend response status:', response.status);
+    console.log(`后端响应状态: ${response.status}`);
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Backend error response:', errorData);
-      return NextResponse.json(
-        { error: errorData.message || `Backend error: ${response.status}` },
-        { status: response.status }
-      );
+      throw new Error(`HTTP ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Backend health data:', data);
-    return NextResponse.json(data);
+    console.log('后端健康检查响应:', data);
+    
+    return NextResponse.json(data, {
+      headers: {
+        'Access-Control-Allow-Origin': 'http://192.168.2.13:3000'
+      }
+    });
   } catch (error) {
-    console.error('Health check failed:', error);
-    // Return more detailed error information
+    console.error('连接测试失败:', {
+      error: (error as Error).message,
+      attemptedUrl: testUrl,
+      timestamp: new Date().toISOString()
+    });
+    
     return NextResponse.json(
-      { 
-        error: 'Failed to connect to backend service', 
-        details: error instanceof Error ? error.message : String(error)
+      {
+        success: false,
+        message: '后端连接测试失败',
+        diagnostic: {
+          backendUrl: testUrl,
+          error: (error as Error).message,
+          suggestion: '请检查后端服务是否运行以及CORS配置'
+        }
       },
-      { status: 500 }
+      { 
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': 'http://192.168.2.13:3000'
+        }
+      }
     );
   }
 }

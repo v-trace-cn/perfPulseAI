@@ -14,7 +14,6 @@ export interface User {
   level?: number;
   createdAt?: string;
   updatedAt?: string;
-  // Add other user properties as needed
 };
 
 type AuthContextType = {
@@ -23,7 +22,7 @@ type AuthContextType = {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, name?: string) => Promise<boolean>;
+  register: (email: string, password: string, name?: string) => Promise<{success: boolean; noUserId?: boolean}>;
   logout: () => void;
 };
 
@@ -65,9 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      console.log('Attempting login with:', { email });
       const response = await directAuthApi.login(email, password);
-      console.log('Login response:', response);
       
       if (!response.success) {
         throw new Error(response.message || '\u767b\u5f55\u5931\u8d25');
@@ -103,40 +100,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, name?: string): Promise<boolean> => {
+  const register = async (email: string, password: string, name?: string): Promise<{success: boolean; noUserId?: boolean}> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('Attempting registration with:', { email, name: name || email.split('@')[0] });
+
       const response = await directAuthApi.register(email, password, name || email.split('@')[0]);
-      console.log('Registration response:', response);
+
       
       if (!response.success) {
         throw new Error(response.message || '\u6ce8\u518c\u5931\u8d25');
       }
       
+      // Check if data and userId are returned in the new structure
+      if (!response.data) {
+        console.warn('Registration successful but no data object returned');
+        return { success: true, noUserId: true };
+      }
+      
+      // 确保userId存在，即使是0也是有效值
+      if (response.data.userId === undefined || response.data.userId === null) {
+        console.warn('Registration successful but userId is undefined or null');
+        return { success: true, noUserId: true };
+      }
+      
+      const userId = response.data.userId;
+
+      
       // Store user ID as token since backend uses sessions
-      if (typeof window !== 'undefined' && response.userId) {
-        localStorage.setItem('token', response.userId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', userId.toString());
         
+        // Create a minimal user object with the userId and provided info from response
+        const userObject = { 
+          id: userId.toString(), 
+          email: response.data.email || email, 
+          name: response.data.name || name || email.split('@')[0] 
+        };
+
+        setUser(userObject);
+        
+        // Only try to fetch profile if we have a valid userId
         try {
           // Fetch user profile with the userId
-          const userData = await directUserApi.getProfile(response.userId);
-          setUser(userData);
+          const userData = await directUserApi.getProfile(userId.toString());
+          if (userData) {
+
+            setUser(userData);
+          }
         } catch (profileError) {
-          console.error('Failed to fetch user profile:', profileError);
-          // Create a minimal user object with the userId and provided info
-          setUser({ id: response.userId, email, name: name || email.split('@')[0] });
+          // We already set a minimal user object above, so no need to do it again
         }
-      } else {
-        throw new Error('\u6ce8\u518c\u6210\u529f\uff0c\u4f46\u672a\u8fd4\u56de\u7528\u6237ID');
       }
-      return true;
+      
+      return { success: true, noUserId: false };
     } catch (err: any) {
-      console.error('Registration error:', err);
       setError(err.message || '\u6ce8\u518c\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u518d\u8bd5');
-      return false;
+      return { success: false };
     } finally {
       setIsLoading(false);
     }

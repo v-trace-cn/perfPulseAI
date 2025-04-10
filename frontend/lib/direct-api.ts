@@ -2,15 +2,12 @@
  * Direct API service for communicating with the backend without Next.js API routes
  */
 
-// Base URL for the backend API
-const BACKEND_API_URL = 'http://localhost:5000';
-// Base URL for our Next.js API routes
-const NEXTJS_API_URL = '';  // 空字符串表示相对路径
+import { apiConfig, getApiUrl } from './config/api-config';
 
 // Generic fetch function with error handling and detailed logging
-async function fetchDirectApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${NEXTJS_API_URL}${endpoint}`;
-  console.log(`Making direct API request to: ${url}`);
+async function fetchDirectApi<T>(endpoint: string, options: RequestInit = {}, useDirectBackend = false): Promise<T> {
+  // Use the centralized configuration to determine the URL
+  const url = endpoint.startsWith('http') ? endpoint : getApiUrl(endpoint, useDirectBackend);
   
   try {
     const response = await fetch(url, {
@@ -22,18 +19,15 @@ async function fetchDirectApi<T>(endpoint: string, options: RequestInit = {}): P
       },
     });
 
-    console.log(`Response status from ${endpoint}:`, response.status);
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error(`API error from ${endpoint}:`, errorData);
-      const errorMessage = errorData.message || errorData.error || `u670du52a1u5668u9519u8bef: ${response.status}`;
-      throw new Error(errorMessage);
-    }
-
+    // Parse the response as JSON
     const data = await response.json();
-    console.log(`Successful response from ${endpoint}:`, data);
-    return data;
+    
+    // Check if the response is ok (status in the range 200-299)
+    if (!response.ok) {
+      throw new Error(data.message || `API error: ${response.status}`);
+    }
+    
+    return data as T;
   } catch (error) {
     console.error(`API request to ${endpoint} failed:`, error);
     throw error;
@@ -51,7 +45,7 @@ export const directAuthApi = {
         name: string; 
         email: string; 
       } 
-    }>(`${NEXTJS_API_URL}/api/auth/login`, {
+    }>(getApiUrl('/api/auth/login'), {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
@@ -65,30 +59,30 @@ export const directAuthApi = {
         name: string; 
         email: string; 
       } 
-    }>(`${NEXTJS_API_URL}/api/auth/register`, {
+    }>(getApiUrl('/api/auth/register'), {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     }),
 
   checkHealth: () => 
-    fetchDirectApi<{ status: string; code: number; message: string }>(`${NEXTJS_API_URL}/api/health`),
+    fetchDirectApi<{ status: string; code: number; message: string }>(getApiUrl('/api/health')),
 };
 
 // User API
 export const directUserApi = {
-  getProfile: (token: string) => 
-    fetchDirectApi<any>(`${NEXTJS_API_URL}/api/users/${token}`, {
+  getProfile: (userId: string) => 
+    fetchDirectApi<any>(getApiUrl(`/api/users/${userId}`), {
       // No authorization header needed as backend uses sessions
     }),
 
-  updateProfile: (token: string, data: any) => 
-    fetchDirectApi<any>(`${NEXTJS_API_URL}/api/users/${token}`, {
+  updateProfile: (userId: string, data: any) => 
+    fetchDirectApi<any>(getApiUrl(`/api/users/${userId}`), {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
     
   updateUserInfo: (userId: string, data: any) => 
-    fetchDirectApi<any>(`${BACKEND_API_URL}/api/users/${userId}/updateInfo`, {
+    fetchDirectApi<any>(getApiUrl(`/api/users/${userId}/updateInfo`), {
       method: 'POST',
       body: JSON.stringify(data),
     }),

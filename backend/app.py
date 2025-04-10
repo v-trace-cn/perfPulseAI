@@ -15,9 +15,12 @@ def create_app(config_name='default'):
     # 初始化CORS
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:3000"],  # 允许Next.js开发服务器访问
+            "origins": [
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
+            ], 
             "methods": ["GET", "POST", "PUT", "DELETE"],
-            "allow_headers": ["Content-Type"]
+            "allow_headers": ["Content-Type", "Authorization"]  # 添加Authorization
         }
     })
     

@@ -1,38 +1,31 @@
 import { NextResponse } from 'next/server';
+import { backendUrl } from '../../../../lib/config/server-api-config';
 
 export async function GET(
   request: Request,
   context: { params: { userId: string } }
 ) {
   try {
-    // 使用await处理params
     const params = await context.params;
     const userId = params.userId;
-    console.log(`Getting user profile for userId: ${userId}`);
     
-    // Forward the request to the backend
-    const response = await fetch(`http://127.0.0.1:5000/api/users/${userId}`, {
+    // Direct connection to the backend with proper timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${backendUrl}/api/users/${userId}`, {
       method: 'GET',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Origin': 'http://localhost:3000'
-      },
+      }
     });
-
-    console.log('Backend user profile response status:', response.status);
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Backend user profile error response:', errorData);
-      return NextResponse.json(
-        { error: errorData.message || `Backend error: ${response.status}` },
-        { status: response.status }
-      );
-    }
-
+    clearTimeout(timeoutId);
+    
     const data = await response.json();
-    console.log('Backend user profile data:', data);
     return NextResponse.json(data);
   } catch (error) {
     console.error('User profile error:', error);
@@ -48,15 +41,17 @@ export async function PUT(
   context: { params: { userId: string } }
 ) {
   try {
-    // 使用await处理params
     const params = await context.params;
     const userId = params.userId;
     const body = await request.json();
-    console.log(`Updating user profile for userId: ${userId}`, body);
     
-    // Forward the request to the backend
-    const response = await fetch(`http://127.0.0.1:5000/api/users/${userId}`, {
+    // Direct connection to the backend with proper timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${backendUrl}/api/users/${userId}`, {
       method: 'PUT',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -64,20 +59,10 @@ export async function PUT(
       },
       body: JSON.stringify(body),
     });
-
-    console.log('Backend user update response status:', response.status);
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Backend user update error response:', errorData);
-      return NextResponse.json(
-        { error: errorData.message || `Backend error: ${response.status}` },
-        { status: response.status }
-      );
-    }
-
+    clearTimeout(timeoutId);
+    
     const data = await response.json();
-    console.log('Backend user update data:', data);
     return NextResponse.json(data);
   } catch (error) {
     console.error('User update error:', error);

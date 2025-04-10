@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
+import { backendUrl } from '../../../../lib/config/server-api-config';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log('Registration request received:', body);
     
-    // Forward the request to the backend
-    const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
+    // Direct connection to the backend with proper timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${backendUrl}/api/auth/register`, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -15,20 +19,11 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(body),
     });
-
-    console.log('Backend registration response status:', response.status);
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Backend registration error response:', errorData);
-      return NextResponse.json(
-        { success: false, error: errorData.message || `Backend error: ${response.status}` },
-        { status: response.status }
-      );
-    }
-
+    clearTimeout(timeoutId);
+    
     const data = await response.json();
-    console.log('Backend registration data:', data);
+    // The backend returns: { data: { email, name, userId }, message: '注册成功', success: true }
     return NextResponse.json(data);
   } catch (error) {
     console.error('Registration error:', error);
