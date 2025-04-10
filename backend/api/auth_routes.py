@@ -55,9 +55,7 @@ def register():
         }), 400
     
     # 创建新用户
-    user_id = str(uuid.uuid4())
     new_user = User(
-        id=user_id,
         name=name,
         email=email,
         password=password  # User 模型中会进行哈希处理
@@ -69,7 +67,6 @@ def register():
     
     return jsonify({
         "success": True,
-        "userId": user_id,
         "message": "注册成功"
     })
 

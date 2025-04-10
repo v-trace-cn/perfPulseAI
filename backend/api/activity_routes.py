@@ -5,9 +5,9 @@ from database import db
 from models.activity import Activity
 
 # 创建活动相关路由的蓝图
-activity_bp = Blueprint('activity', __name__, url_prefix='/api/activity')
+activity_bp = Blueprint('activity', __name__, url_prefix='/api/activities')
 
-@activity_bp.route('/activities', methods=['GET'])
+@activity_bp.route('/', methods=['GET'])
 def get_activities():
     """获取所有活动"""
     # 获取分页和搜索参数
@@ -34,7 +34,7 @@ def get_activities():
         "per_page": per_page
     })
 
-@activity_bp.route('/activities/recent', methods=['GET'])
+@activity_bp.route('/recent', methods=['GET'])
 def get_recent_activities():
     """获取最近活动"""
     # 获取最近的5个活动
@@ -53,7 +53,7 @@ def get_recent_activities():
     
     return jsonify(activities_data)
 
-@activity_bp.route('/activities', methods=['POST'])
+@activity_bp.route('/new', methods=['POST'])
 def create_activity():
     """创建新活动"""
     data = request.json
@@ -81,7 +81,7 @@ def create_activity():
         "activity": new_activity.to_dict()
     })
 
-@activity_bp.route('/activities/<activity_id>', methods=['GET'])
+@activity_bp.route('/<activity_id>', methods=['GET'])
 def get_activity(activity_id):
     """根据ID获取活动"""
     activity = Activity.query.get(activity_id)
@@ -121,7 +121,7 @@ def update_activity(activity_id):
         "activity": activity.to_dict()
     })
 
-@activity_bp.route('/activities/<activity_id>', methods=['DELETE'])
+@activity_bp.route('/<activity_id>', methods=['DELETE'])
 def delete_activity(activity_id):
     """删除活动"""
     activity = Activity.query.get(activity_id)

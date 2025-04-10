@@ -53,16 +53,13 @@ perfPulseAI/
 1. **后端部署**
    - 安装Python和依赖: `pip install -r backend/requirements.txt`
    - 配置环境变量: 复制 `.env.example` 到 `.env` 并修改
+   - （首次可选）启动数据库: `python backend/init_db.py`
    - 启动API服务器: `python backend/app.py`
 
 2. **前端部署**
    - 安装Node.js和依赖: `cd frontend && npm install` 或者 `npm install --legacy-peer-deps`
-   - 配置环境变量: 复制 `.env.example` 到 `.env` 并修改
    - 开发模式: `npm run dev`
    - 生产构建: `npm run build`
-
-3. **Docker部署** (可选)
-   - 一键启动: `docker-compose up -d`
 
 ## 项目特点
 
