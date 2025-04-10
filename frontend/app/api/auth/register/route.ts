@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     console.log('Registration request received:', body);
     
     // Forward the request to the backend
-    const response = await fetch('http://127.0.0.1:5000/api/users/register', {
+    const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
